@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barracos - Fofocas Anônimas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(to bottom, #6B46C1, #F687B3); color: white; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #F6E05E; }
+        form { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 5px; box-sizing: border-box; }
+        button { background: #F6E05E; color: #6B46C1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; }
+        .post { background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px; }
+        .post h3 { margin: 0; color: #F6E05E; }
+        .likes { color: #F6E05E; cursor: pointer; }
+        .comments { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.3); }
+        .comment-form { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Barracos 🗣️</h1>
+    <p style="text-align: center;">Conte sua fofoca anônima! (Aviso: Sem nomes reais ou ofensas)</p>
+
+    <!-- Formulário de Postagem -->
+    <form id="postForm">
+        <textarea id="texto" placeholder="Digite sua fofoca aqui (máx 500 chars)..." maxlength="500" required></textarea>
+        <select id="categoria">
+            <option value="Amor">Amor 💔</option>
+            <option value="Trabalho">Trabalho 💼</option>
+            <option value="Vizinhança">Vizinhança 🏠</option>
+            <option value="Outros">Outros 🤷</option>
+        </select>
+        <button type="submit">Postar Anônimo</button>
+    </form>
+
+    <!-- Feed de Posts -->
+    <div id="feed"></div>
+
+    <script>
+        // Carregar posts do localStorage
+        let posts = JSON.parse(localStorage.getItem('barracos-posts')) || [];
+
+        // Função para salvar posts
+        function savePosts() {
+            localStorage.setItem('barracos-posts', JSON.stringify(posts));
+        }
+
+        // Renderizar feed
+        function renderFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            posts.forEach((post, index) => {
+                const postEl = document.createElement('div');
+                postEl.className = 'post';
+                postEl.innerHTML = `
+                    <h3>${post.categoria}</h3>
+                    <p>${post.texto}</p>
+                    <span class="likes" onclick="likePost(${index})">❤️ ${post.likes || 0} curtidas</span>
+                    <div class="comments">
+                        <h4>Comentários:</h4>
+                        ${ (post.comments || []).map(com => `<p><em>${com}</em></p>`).join('') }
+                        <form class="comment-form" onsubmit="addComment(event, ${index})">
+                            <input id="comment-${index}" placeholder="Comente anônimo..." maxlength="200">
+                            <button type="submit">Enviar</button>
+                        </form>
+                    </div>
+                `;
+                feed.appendChild(postEl);
+            });
+        }
+
+        // Adicionar post
+        document.getElementById('postForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const texto = document.getElementById('texto').value;
+            const categoria = document.getElementById('categoria').value;
+            if (texto.trim()) {
+                posts.unshift({ texto, categoria, likes: 0, comments: [] }); // Adiciona no topo
+                savePosts();
+                renderFeed();
+                e.target.reset();
+            }
+        });
+
+        // Curtir post
+        function likePost(index) {
+            if (!posts[index].likes) posts[index].likes = 0;
+            posts[index].likes++;
+            savePosts();
+            renderFeed();
+        }
+
+        // Adicionar comentário
+        function addComment(e, index) {
+            e.preventDefault();
+            const input = document.getElementById(`comment-${index}`);
+            if (input.value.trim()) {
+                posts[index].comments.push(input.value);
+                savePosts();
+                renderFeed();
+            }
+        }
+
+        // Inicializar
+        renderFeed();
+    </script>
+</body>
+</html>
